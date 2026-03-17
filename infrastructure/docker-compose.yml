@@ -11,19 +11,9 @@ services:
     container_name: git-sync
     command: >
       sh -c "
-      # Fetch Orchestrator Code (which includes our lightweight Dockerfile)
-      if [ -d /repo/orchestration/.git ]; then
-        cd /repo/orchestration && git pull origin main;
-      else
-        git clone https://github.com/AlamiaSoft/AITeamOrchestration.git /repo/orchestration;
-      fi
-      
-      # Fetch the MetaGPT-WebUI source code directly
-      if [ -d /repo/metagpt-webui-src/.git ]; then
-        cd /repo/metagpt-webui-src && git pull origin main;
-      else
-        git clone https://github.com/Ori-Replication/MetaGPT-WebUI.git /repo/metagpt-webui-src;
-      fi
+      rm -rf /repo/orchestration /repo/metagpt-webui-src &&
+      git clone https://github.com/AlamiaSoft/AITeamOrchestration.git /repo/orchestration &&
+      git clone https://github.com/Ori-Replication/MetaGPT-WebUI.git /repo/metagpt-webui-src
       "
     volumes:
       - repo-data:/repo
