@@ -76,11 +76,10 @@ services:
   #    to avoid hundreds of MBs of Chromium and ARM package errors.
   # ---------------------------------------------------------------------------------
   metagpt-webui:
-    # Instead of building from pulling the whole remote git repository using the 
-    # author's heavy Dockerfile, we build using our local context.
+    # Build directly from our Github Repository to grab the Dockerfile.webui!
     build: 
-      context: .
-      dockerfile: ./Dockerfile.webui
+      context: https://github.com/AlamiaSoft/AITeamOrchestration.git#main
+      dockerfile: infrastructure/Dockerfile.webui
     container_name: metagpt-webui
     restart: unless-stopped
     ports:
@@ -91,7 +90,7 @@ services:
       - repo-data:/repo
       - metagpt-workspace:/app/workspace
     # The container builds quickly because it just has Python.
-    # At runtime, it navigates to the cloned UI source code, installs dependencies, 
+    # At runtime, it navigates to the UI source code, installs dependencies, 
     # patches Gradio to 0.0.0.0, and starts the interface.
     command: >
       sh -c "
