@@ -17,7 +17,7 @@ services:
       sh -c " # Fetch Orchestrator Code if [ -d /repo/orchestration/.git ]; then
         cd /repo/orchestration && git pull origin main;
       else
-        git clone YOUR_ORCHESTRATOR_REPO_URL /repo/orchestration;
+        git clone https://github.com/AlamiaSoft/AITeamOrchestration.git /repo/orchestration;
       fi
 
       # Fetch Bridge Code if [ -d /repo/bridge/.git ]; then
