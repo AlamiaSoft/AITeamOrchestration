@@ -26,7 +26,6 @@ services:
   #    Portainer natively builds this by cloning the repository from GitHub.
   # ---------------------------------------------------------------------------------
   vps-ai-bridge:
-    # Build directly from the GitHub repository! No local files needed.
     build: https://github.com/AlamiaSoft/VPS-AI-Bridge-Standalone.git#main
     container_name: vps-ai-bridge
     restart: unless-stopped
@@ -66,9 +65,10 @@ services:
 
   # ---------------------------------------------------------------------------------
   # 3. User Interface: MetaGPT Community WebUI
+  #    Builds directly from the Open Source repository since the image isn't published.
   # ---------------------------------------------------------------------------------
   metagpt-webui:
-    image: orirep/metagpt-webui:latest
+    build: https://github.com/Ori-Replication/MetaGPT-WebUI.git#main
     container_name: metagpt-webui
     restart: unless-stopped
     ports:
