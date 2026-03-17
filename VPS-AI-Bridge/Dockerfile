@@ -2,11 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY server.py .
+# We now only install base dependencies here since the code comes from a mounted volume
+RUN pip install --no-cache-dir fastapi uvicorn requests pydantic
 
 EXPOSE 5000
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "5000"]
+# Command is overridden in docker-compose.yml to run from the mounted repo volume
+CMD ["tail", "-f", "/dev/null"]
