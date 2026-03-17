@@ -1,0 +1,17 @@
+# Use a much lighter, standard python slim image instead of a 1GB NodeJS/Chromium image
+FROM python:3.9-slim
+
+# Avoid writing .pyc files and enable unbuffered logging
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install git (needed by MetaGPT framework to clone code inside the container)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    rm -rf /var/lib/apt/lists/*
+
+# The source code will be mounted from the git-sync volume, so we just
+# provide a minimal runtime environment.
+CMD ["tail", "-f", "/dev/null"]
