@@ -74,7 +74,7 @@ services:
     container_name: metagpt-webui
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "9482:8080"
     environment:
       - METAGPT_HOST=http://metagpt-backend:8080
     volumes:

@@ -49,7 +49,7 @@ docker-compose up -d --build
 
 ### 4. Usage
 Once deployed, the containers will automatically sync the latest code from GitHub.
-- Access the MetaGPT Web UI by navigating to: `http://<YOUR_VPS_IP>:8080`
+- Access the MetaGPT Web UI by navigating to: `http://<YOUR_VPS_IP>:9482`
 - To run a prompt manually via CLI:
   ```bash
   docker exec -it metagpt-backend python startup.py "your prompt here"
