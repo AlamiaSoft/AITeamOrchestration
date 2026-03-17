@@ -1,0 +1,17 @@
+Role: 
+You are a top-tier software company consisting of a Product Manager, Architect, Senior UI/UX Designer, Senior Full-Stack Engineer, and QA. 
+
+Project:
+We are building an "MVP Personal Accountant App" for individual users to track their incomes and expenses intuitively.
+
+Requirements:
+1. Tech Stack: Python backend (FastAPI or Flask) with a clean HTML/JS/CSS frontend (vanilla or lightweight framework) or React/NextJS if you prefer. Database should be SQLite for ease of portability.
+2. Core Features:
+- Income & Expense Logging: Form to add transactions (Amount, Date, Category, Type: Income/Expense, Description).
+- Dashboard: An intuitive, visual summary of current balance, total income, and total expenses for the month.
+- Categorization: Allow basic categories (Salary, Groceries, Rent, Utilities, Entertainment).
+3. Design: The UI must look modern, clean, and responsive (mobile-friendly).
+4. Code Quality: Ensure enterprise-grade project structure, separation of concerns, and clean, commented code. Write basic tests for the API layer.
+
+Output:
+Please generate ALL necessary files, including the README.md with run instructions, the dependency manager files (requirements.txt or package.json), the database schema, the backend APIs, and the frontend views.

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------------
+  # 1. Intelligence Provider: The Custom VPS-AI-Bridge
+  #    Translates OpenAI formatted requests from MetaGPT into routed API calls 
+  #    to Groq, SambaNova, OpenRouter etc.
+  # ---------------------------------------------------------------------------------
+  vps-ai-bridge:
+    build: 
+      context: ../VPS-AI-Bridge
+    container_name: vps-ai-bridge
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      # Inject your real API keys here (ideally via Portainer Secrets or .env file)
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SAMBANOVA_API_KEY=${SAMBANOVA_API_KEY}
+    networks:
+      - agent-net
+
+  # ---------------------------------------------------------------------------------
+  # 2. Orchestration Engine: MetaGPT Backend
+  #    Runs the agents and connects to the vps-ai-bridge for intelligence.
+  # ---------------------------------------------------------------------------------
+  metagpt:
+    image: metagpt/metagpt:latest
+    container_name: metagpt-backend
+    restart: unless-stopped
+    volumes:
+      # Mount configuration file
+      - ./config2.yaml:/app/config/config2.yaml
+      # Mount output directory so you can access generated code from the host
+      - ./workspace:/app/workspace
+    working_dir: /app
+    command: tail -f /dev/null # Keep container alive so WebUI or Exec can trigger runs
+    depends_on:
+      - vps-ai-bridge
+    networks:
+      - agent-net
+
+  # ---------------------------------------------------------------------------------
+  # 3. User Interface: MetaGPT Community WebUI
+  #    Provides a visual way to interact with the MetaGPT backend.
+  # ---------------------------------------------------------------------------------
+  metagpt-webui:
+    image: orirep/metagpt-webui:latest # Community image
+    container_name: metagpt-webui
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Access UI at http://<VPS-IP>:8080
+    environment:
+      - METAGPT_HOST=http://metagpt-backend:8080 # Unused if relying purely on exec
+    volumes:
+      - ./workspace:/app/workspace # Access the same outputs
+    depends_on:
+      - metagpt
+    networks:
+      - agent-net
+
+networks:
+  agent-net:
+    driver: bridge

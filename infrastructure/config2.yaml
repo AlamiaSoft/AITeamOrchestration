@@ -1,0 +1,17 @@
+llm:
+  api_type: "openai"
+  # This points to our custom bridge container running in the same Docker network!
+  base_url: "http://vps-ai-bridge:5000/v1"
+  
+  # The bridge doesn't actually need the OpenAI key, but MetaGPT's strict typing might require something here.
+  api_key: "sk-dummy-key"
+  
+  # This alias will be passed to the Bridge. 
+  # According to our bridge logic, "deepseek-coder", "precision", or "architect" will trigger specific routes.
+  model: "architect" 
+
+  # Set token limits according to the average model size we are routing to
+  max_token: 8000
+
+# Directory for output
+workspace: "/app/workspace"
