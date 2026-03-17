@@ -3,39 +3,31 @@ version: '3.8'
 services:
   # ---------------------------------------------------------------------------------
   # 0. Code Fetcher (Init Container)
-  #    Clones both your Orchestration repo AND your generic VPS-AI-Bridge repo 
-  #    before starting the main services.
+  #    Clones the Orchestration deployment repository before other containers start
+  #    so MetaGPT has access to its configuration files.
   # ---------------------------------------------------------------------------------
   git-sync:
     image: alpine/git:latest
     container_name: git-sync
-    # Replace these URLs with your actual public/private GitHub repository URLs
-    # Example: 
-    # ORCHESTRATOR_REPO="https://github.com/AliRaza/AITeamOrchestration.git"
-    # BRIDGE_REPO="https://github.com/AliRaza/VPS-AI-Bridge.git"
     command: >
-      sh -c " # Fetch Orchestrator Code if [ -d /repo/orchestration/.git ]; then
+      sh -c "
+      # Fetch Orchestrator Code
+      if [ -d /repo/orchestration/.git ]; then
         cd /repo/orchestration && git pull origin main;
       else
         git clone https://github.com/AlamiaSoft/AITeamOrchestration.git /repo/orchestration;
       fi
-
-      # Fetch Bridge Code if [ -d /repo/bridge/.git ]; then
-        cd /repo/bridge && git pull origin main;
-      else
-        git clone https://github.com/AlamiaSoft/VPS-AI-Bridge-Standalone.git /repo/bridge;
-      fi "
+      "
     volumes:
       - repo-data:/repo
 
   # ---------------------------------------------------------------------------------
   # 1. Intelligence Provider: The Custom VPS-AI-Bridge
-  #    This acts as a standalone service built from its own repository code.
+  #    Portainer natively builds this by cloning the repository from GitHub.
   # ---------------------------------------------------------------------------------
   vps-ai-bridge:
-    build:
-      context: .
-      dockerfile: ./bridge/Dockerfile
+    # Build directly from the GitHub repository! No local files needed.
+    build: https://github.com/AlamiaSoft/VPS-AI-Bridge-Standalone.git#main
     container_name: vps-ai-bridge
     restart: unless-stopped
     ports:
@@ -44,13 +36,6 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - SAMBANOVA_API_KEY=${SAMBANOVA_API_KEY}
-    volumes:
-      - repo-data:/app_code
-    # Run the server from the standalone bridge repository folder
-    command: [ "sh", "-c", "cd /app_code/bridge && pip install -r requirements.txt && uvicorn server:app --host 0.0.0.0 --port 5000" ]
-    depends_on:
-      git-sync:
-        condition: service_completed_successfully
     networks:
       - agent-net
 
@@ -67,7 +52,10 @@ services:
     working_dir: /app
     # Copy the config from the orchestrator repo volume to where MetaGPT expects it
     command: >
-      sh -c " cp /repo/orchestration/infrastructure/config2.yaml /app/config/config2.yaml && tail -f /dev/null "
+      sh -c "
+      cp /repo/orchestration/infrastructure/config2.yaml /app/config/config2.yaml &&
+      tail -f /dev/null
+      "
     depends_on:
       git-sync:
         condition: service_completed_successfully
