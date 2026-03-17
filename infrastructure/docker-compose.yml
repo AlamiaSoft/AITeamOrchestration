@@ -7,10 +7,11 @@ services:
   #    so MetaGPT has access to its configuration files.
   # ---------------------------------------------------------------------------------
   git-sync:
-    image: alpine/git:latest
+    image: debian:bullseye-slim
     container_name: git-sync
     command: >
       sh -c "
+      apt-get update && apt-get install -y git ca-certificates &&
       rm -rf /repo/orchestration /repo/metagpt-webui-src &&
       git clone https://github.com/AlamiaSoft/AITeamOrchestration.git /repo/orchestration &&
       git clone https://github.com/Ori-Replication/MetaGPT-WebUI.git /repo/metagpt-webui-src
