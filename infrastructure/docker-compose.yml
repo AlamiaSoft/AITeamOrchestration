@@ -54,13 +54,15 @@ services:
     image: metagpt/metagpt:latest
     container_name: metagpt-backend
     restart: unless-stopped
+    environment:
+      - OPENAI_API_KEY=dummy-key-for-bridge
+      - OPENAI_API_BASE=http://vps-ai-bridge:5000/v1
     volumes:
       - repo-data:/repo
       - metagpt-workspace:/app/workspace
     working_dir: /app
     command: >
       sh -c "
-      cp /repo/orchestration/infrastructure/config2.yaml /app/config/config2.yaml &&
       tail -f /dev/null
       "
     depends_on:
