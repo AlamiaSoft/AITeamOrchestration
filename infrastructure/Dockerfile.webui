@@ -1,17 +1,8 @@
-# Use a much lighter, standard python slim image instead of a 1GB NodeJS/Chromium image
-FROM python:3.9-slim
+# Use the official MetaGPT image as base so we don't compile heavy AI packages (like faiss, lancedb) from source on ARM!
+FROM metagpt/metagpt:latest
 
-# Avoid writing .pyc files and enable unbuffered logging
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# MetaGPT is already installed in this image. We just need Gradio for the UI.
+RUN pip install --no-cache-dir gradio==2.3.6
 
-WORKDIR /app
-
-# Install git (needed by MetaGPT framework to clone code inside the container)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git && \
-    rm -rf /var/lib/apt/lists/*
-
-# The source code will be mounted from the git-sync volume, so we just
-# provide a minimal runtime environment.
+# The source code will be mounted from the git-sync volume
 CMD ["tail", "-f", "/dev/null"]
