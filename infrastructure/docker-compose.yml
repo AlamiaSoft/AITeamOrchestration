@@ -77,6 +77,8 @@ services:
       - "9482:8080"
     environment:
       - METAGPT_HOST=http://metagpt-backend:8080
+      - OPENAI_API_KEY=dummy-key-for-bridge
+      - OPENAI_API_BASE=http://vps-ai-bridge:5000/v1
     volumes:
       - repo-data:/repo
       - metagpt-workspace:/app/workspace
