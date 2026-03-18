@@ -3,8 +3,7 @@ version: '3.8'
 services:
   # ---------------------------------------------------------------------------------
   # 0. Code Fetcher (Init Container)
-  #    Clones the Orchestration deployment repository before other containers start
-  #    so MetaGPT has access to its configuration files.
+  #    Clones all three repositories (Orchestrator, Bridge, WebUI) to a shared volume.
   # ---------------------------------------------------------------------------------
   git-sync:
     image: debian:bullseye-slim
@@ -12,19 +11,20 @@ services:
     command: >
       sh -c "
       apt-get update && apt-get install -y git ca-certificates &&
-      rm -rf /repo/orchestration /repo/metagpt-webui-src &&
+      rm -rf /repo/orchestration /repo/metagpt-webui-src /repo/bridge &&
       git clone https://github.com/AlamiaSoft/AITeamOrchestration.git /repo/orchestration &&
-      git clone https://github.com/Ori-Replication/MetaGPT-WebUI.git /repo/metagpt-webui-src
+      git clone https://github.com/Ori-Replication/MetaGPT-WebUI.git /repo/metagpt-webui-src &&
+      git clone https://github.com/AlamiaSoft/VPS-AI-Bridge-Standalone.git /repo/bridge
       "
     volumes:
       - repo-data:/repo
 
   # ---------------------------------------------------------------------------------
   # 1. Intelligence Provider: The Custom VPS-AI-Bridge
-  #    Portainer natively builds this by cloning the repository from GitHub.
+  #    Uses standard Python slim image to avoid Portainer build restrictions.
   # ---------------------------------------------------------------------------------
   vps-ai-bridge:
-    build: https://github.com/AlamiaSoft/VPS-AI-Bridge-Standalone.git#main
+    image: python:3.9-slim
     container_name: vps-ai-bridge
     restart: unless-stopped
     ports:
@@ -33,6 +33,17 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - SAMBANOVA_API_KEY=${SAMBANOVA_API_KEY}
+    volumes:
+      - repo-data:/repo
+    command: >
+      sh -c "
+      cd /repo/bridge &&
+      pip install --no-cache-dir -r requirements.txt &&
+      uvicorn server:app --host 0.0.0.0 --port 5000
+      "
+    depends_on:
+      git-sync:
+        condition: service_completed_successfully
     networks:
       - agent-net
 
@@ -47,7 +58,6 @@ services:
       - repo-data:/repo
       - metagpt-workspace:/app/workspace
     working_dir: /app
-    # Copy the config from the orchestrator repo volume to where MetaGPT expects it
     command: >
       sh -c "
       cp /repo/orchestration/infrastructure/config2.yaml /app/config/config2.yaml &&
@@ -62,15 +72,12 @@ services:
       - agent-net
 
   # ---------------------------------------------------------------------------------
-  # 3. User Interface: MetaGPT Community WebUI (Custom Lightweight Build)
-  #    Builds from the fetched source code using our custom minimal Dockerfile 
-  #    to avoid hundreds of MBs of Chromium and ARM package errors.
+  # 3. User Interface: MetaGPT Community WebUI
+  #    Uses official MetaGPT image as base and installs Gradio at runtime.
+  #    This completely bypasses Portainer's remote Dockerfile build failures!
   # ---------------------------------------------------------------------------------
   metagpt-webui:
-    # Build directly from our Github Repository to grab the Dockerfile.webui!
-    build: 
-      context: https://github.com/AlamiaSoft/AITeamOrchestration.git#main
-      dockerfile: infrastructure/Dockerfile.webui
+    image: metagpt/metagpt:latest
     container_name: metagpt-webui
     restart: unless-stopped
     ports:
@@ -82,11 +89,9 @@ services:
     volumes:
       - repo-data:/repo
       - metagpt-workspace:/app/workspace
-    # The container builds quickly because it just has Python.
-    # At runtime, it navigates to the UI source code, installs dependencies, 
-    # patches Gradio to 0.0.0.0, and starts the interface.
     command: >
       sh -c "
+      pip install --no-cache-dir gradio==2.3.6 &&
       cd /repo/metagpt-webui-src &&
       sed -i 's/app.queue.*launch(inbrowser=True)/app.queue().launch(server_name=\"0.0.0.0\", server_port=8080)/' metagpt/app.py &&
       PYTHONPATH=/repo/metagpt-webui-src python metagpt/app.py
